@@ -39,4 +39,5 @@ class Evaluator:
             except ValueError as e:
                 print(f"Notice: Metric '{metric_name}' is skipped. Reason: {e}")
 
-        self.tracker.log_metrics(metrics, step=step)
+        if metrics:
+            self.tracker.log_metrics(metrics, step=step)

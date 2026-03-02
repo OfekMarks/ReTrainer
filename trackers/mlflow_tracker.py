@@ -16,10 +16,16 @@ class MLflowTracker(ExperimentTracker):
     Follows Single Responsibility Principle by handling only MLflow-specific interactions.
     """
 
-    def __init__(self, tracking_uri: Optional[str] = None):
+    def __init__(
+        self,
+        experiment_name: str,
+        run_name: Optional[str] = None,
+        tracking_uri: Optional[str] = None,
+    ):
         """
         Initialize the setup. Will default to pydantic settings if URI isn't provided.
         """
+        super().__init__(experiment_name, run_name)
         self.tracking_uri = tracking_uri or settings.mlflow_tracking_uri
 
     def setup_experiment(

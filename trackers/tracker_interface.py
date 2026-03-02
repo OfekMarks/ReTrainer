@@ -9,6 +9,17 @@ class ExperimentTracker(ABC):
     Follows the Dependency Inversion Principle (DIP) to allow swapping backends.
     """
 
+    def __init__(self, experiment_name: str, run_name: Optional[str] = None):
+        self.experiment_name = experiment_name
+        self.run_name = run_name
+
+    def __enter__(self):
+        self.setup_experiment(self.experiment_name, self.run_name)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.end_run()
+
     @abstractmethod
     def setup_experiment(
         self, experiment_name: str, run_name: Optional[str] = None
