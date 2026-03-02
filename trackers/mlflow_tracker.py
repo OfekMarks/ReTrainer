@@ -71,6 +71,17 @@ class MLflowTracker(ExperimentTracker):
         except ModuleNotFoundError:
             raise ValueError(f"Unsupported flavor: {flavor}")
 
+    def load_model(self, model_uri: str, flavor: str = "sklearn", **kwargs) -> Any:
+        """
+        Load a native model (e.g., PyTorch nn.Module, Scikit-learn estimator) from MLflow memory
+        so it can be fine-tuned or evaluated.
+        """
+        try:
+            module = importlib.import_module(f"mlflow.{flavor}")
+            return module.load_model(model_uri, **kwargs)
+        except ModuleNotFoundError:
+            raise ValueError(f"Unsupported flavor: {flavor}")
+
     def end_run(self) -> None:
         """Safely end the MLflow run."""
         if mlflow.active_run():

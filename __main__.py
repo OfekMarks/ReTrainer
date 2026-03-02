@@ -18,10 +18,12 @@ if __name__ == "__main__":
         experiment_name="cpu_retraining_experiment",
         run_name=f"retraining_{REPO.split('/')[-1]}_{DATASOURCE}",
     ) as tracker:
+
+        model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+
         classification_trainer = SklearnClassificationTrainer(
-            model=RandomForestClassifier(
-                n_estimators=100, max_depth=10, random_state=42
-            ),
+            model=model,
+            model_uri="models:/survival-classifier/1",
             tracker=tracker,
             metrics=["ROC", "Recall", "Precision"],
         )

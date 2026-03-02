@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, List, Optional
 from trackers.tracker_interface import ExperimentTracker
 from evaluator import Evaluator
 
@@ -13,13 +13,33 @@ class TrainerInterface(ABC):
 
     VALID_METRICS = []
 
-    def __init__(self, metrics: List[str], tracker: ExperimentTracker, model: Any):
+    def __init__(
+        self,
+        metrics: List[str],
+        tracker: ExperimentTracker,
+        model: Any = None,
+        model_uri: Optional[str] = None,
+    ):
         self.metrics = metrics
         self.tracker = tracker
         self.model = model
+        self.model_uri = model_uri
         self.evaluator = Evaluator(tracker=tracker)
 
         self._validate_metrics()
+        self.load_model()
+
+    def load_model(self, flavor: str = "sklearn") -> None:
+        """Loads the model from the tracker if a model_uri is provided."""
+        if self.model_uri:
+            print(
+                f"Loading existing model for fine-tuning from MLflow: {self.model_uri}"
+            )
+            self.model = self.tracker.load_model(
+                model_uri=self.model_uri, flavor=flavor
+            )
+        elif self.model is None:
+            raise ValueError("Either 'model' or 'model_uri' must be provided.")
 
     def _validate_metrics(self):
         for metric in self.metrics:

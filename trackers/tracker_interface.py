@@ -47,6 +47,11 @@ class ExperimentTracker(ABC):
         pass
 
     @abstractmethod
+    def load_model(self, model_uri: str, flavor: str = "sklearn", **kwargs) -> Any:
+        """Fetch a logged/registered model artifact."""
+        pass
+
+    @abstractmethod
     def end_run(self) -> None:
         """End the current tracking run."""
         pass
