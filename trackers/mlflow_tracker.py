@@ -38,7 +38,7 @@ class MLflowTracker(ExperimentTracker):
         if run_name:
             mlflow.start_run(run_name=run_name)
 
-    def log_params(self, params: Dict[str, Any]) -> None:
+    def log_params(self, **params) -> None:
         """Log hyperparameters to MLflow."""
         mlflow.log_params(params)
 

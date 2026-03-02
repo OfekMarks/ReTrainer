@@ -17,7 +17,7 @@ class ExperimentTracker(ABC):
         pass
 
     @abstractmethod
-    def log_params(self, params: Dict[str, Any]) -> None:
+    def log_params(self, **params) -> None:
         """Log hyperparameters to the active tracking run."""
         pass
 
