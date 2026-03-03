@@ -1,22 +1,42 @@
 import streamlit as st
 from typing import Dict, Any
+from trainers import AVAILABLE_TRAINERS
+from preprocessors import AVAILABLE_PREPROCESSORS
+import class_registry
 
 
 def render_model_config() -> Dict[str, Any]:
-    """Renders the UI for configuring Model Architecture and Fine-Tuning."""
-    st.header("2. Model & Trainer Configuration")
+    """Renders the UI for configuring ML Architecture, Preprocessing natively."""
+    st.header("2. ML Pipeline Components")
 
-    task_type = st.selectbox(
-        "ML Task Trainer", options=["SklearnClassificationTrainer"]
+    # --- PREPROCESSOR ---
+    st.subheader("Data Preprocessor")
+    prep_name = st.selectbox(
+        "Preprocessor Implementation", options=list(AVAILABLE_PREPROCESSORS.keys())
+    )
+    prep_cls = AVAILABLE_PREPROCESSORS[prep_name]
+    prep_kwargs = class_registry.render_dynamic_params(
+        prep_cls, key_prefix="preprocessor"
     )
 
-    st.subheader("Model Source")
+    st.markdown("---")
+
+    # --- TRAINER ---
+    st.subheader("ML Task Trainer")
+    trainer_name = st.selectbox(
+        "Trainer Implementation", options=list(AVAILABLE_TRAINERS.keys())
+    )
+    trainer_cls = AVAILABLE_TRAINERS[trainer_name]
+
+    # We still need a way to let them decide if they are doing scratch or finetuning:
     strategy = st.radio(
         "Training Strategy", ["Train from Scratch", "Fine-Tune Existing Model"]
     )
 
     model_config = {
-        "task_type": task_type,
+        "prep_cls": prep_cls,
+        "prep_kwargs": prep_kwargs,
+        "trainer_cls": trainer_cls,
         "strategy": strategy,
         "model_uri": None,
         "model_class_str": None,
@@ -30,6 +50,7 @@ def render_model_config() -> Dict[str, Any]:
             help="e.g. models:/<model_name>/<version> or runs:/<run_id>/model",
         )
     else:
+        # In the future we can utilize class registry here for native Scikit-Learn models!
         model_config["model_class_str"] = st.selectbox(
             "Model Architecture", options=["RandomForestClassifier"]
         )

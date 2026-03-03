@@ -1,10 +1,18 @@
-from trainers.sklearn_classification_trainer import SklearnClassificationTrainer
 from sklearn.ensemble import RandomForestClassifier
-from data_loaders.dagshub_loader import DagsHubDataEngineLoader
 from trackers.mlflow_tracker import MLflowTracker
-from preprocessors.default_tabular_preprocessor import DefaultTabularPreprocessor
 from trainer import run_training_pipeline
 import streamlit as st
+
+
+def instantiate_from_config(cls, kwargs: dict):
+    """
+    Instantiates a class by dynamically unpacking and validating its kwargs
+    through its Pydantic ConfigModel if one exists.
+    """
+    if hasattr(cls, "ConfigModel"):
+        validated_config = cls.ConfigModel(**kwargs).model_dump()
+        return cls(**validated_config)
+    return cls(**kwargs)
 
 
 def execute_pipeline(data_config: dict, model_config: dict, eval_config: dict):
@@ -22,12 +30,10 @@ def execute_pipeline(data_config: dict, model_config: dict, eval_config: dict):
 
         # 2. Instantiate Data Loader
         st.write(
-            f"Connecting to DagsHub Data Engine (Repo: `{data_config['repo']}`)..."
+            f"Instantiating Data Loader: `{data_config['loader_cls'].__name__}`..."
         )
-        dagshub_loader = DagsHubDataEngineLoader(
-            repo=data_config["repo"],
-            datasource_name=data_config["datasource_name"],
-            format_type=data_config["format_type"],
+        loader = instantiate_from_config(
+            data_config["loader_cls"], data_config["loader_kwargs"]
         )
 
         # 3. Handle Model Selection
@@ -40,10 +46,15 @@ def execute_pipeline(data_config: dict, model_config: dict, eval_config: dict):
             st.write(
                 f"Instantiating new {model_config['model_class_str']} from scratch..."
             )
-            model = RandomForestClassifier(**model_config["params"])
+            model = model_config["model_class_str"](**model_config["params"])
 
-        # 4. Instantiate Trainer
-        trainer = SklearnClassificationTrainer(
+        # 4. Instantiate Preprocessor (which isn't dependent on tracker/model)
+        prep = instantiate_from_config(
+            model_config["prep_cls"], model_config["prep_kwargs"]
+        )
+
+        # 5. Instantiate Trainer
+        trainer = model_config["trainer_cls"](
             model=model,
             model_uri=model_config["model_uri"],
             tracker=tracker,
@@ -55,9 +66,7 @@ def execute_pipeline(data_config: dict, model_config: dict, eval_config: dict):
 
         run_training_pipeline(
             tracker=tracker,
-            data_loader=dagshub_loader,
-            preprocessor=DefaultTabularPreprocessor(
-                target_column=data_config["target_column"]
-            ),
+            data_loader=loader,
+            preprocessor=prep,
             model_trainer=trainer,
         )

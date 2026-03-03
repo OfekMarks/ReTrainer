@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import Any, Tuple
+from pydantic import BaseModel, Field
 from preprocessors.preprocessor_interface import PreprocessorInterface
 
 
@@ -8,6 +9,11 @@ class DefaultTabularPreprocessor(PreprocessorInterface):
     Concrete implementation of PreprocessorInterface for standard
     tabular DataFrames, specifically tailored for Scikit-Learn models.
     """
+
+    class ConfigModel(BaseModel):
+        target_column: str = Field(
+            default="survived", description="The name of the column to predict"
+        )
 
     def __init__(self, target_column: str):
         self.target_column = target_column

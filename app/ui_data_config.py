@@ -1,24 +1,30 @@
 import streamlit as st
 
 
+from data_loaders import AVAILABLE_LOADERS
+import class_registry
+
+
 def render_data_config() -> dict:
-    """Renders the UI for configuring DagsHub Data Ingestion."""
+    """Renders the UI for configuring Data Ingestion dynamically."""
     st.header("1. Data Configuration")
-    st.write("Configure connection to DagsHub Data Engine.")
+    st.write("Configure connection to Data Engine.")
 
-    repo_name = st.text_input(
-        "DagsHub Repository (owner/repo)", value="ofekmarks/my-first-repo"
+    # 1. Select the Data Loader implementation
+    loader_name = st.selectbox(
+        "Data Loader Implementation", options=list(AVAILABLE_LOADERS.keys())
     )
-    datasource_name = st.text_input("Datasource Name", value="datasource")
+    loader_cls = AVAILABLE_LOADERS[loader_name]
 
-    # We can expand this list in the future
-    format_type = st.selectbox("Format Type", options=["dataframe"])
+    st.markdown("---")
+    st.subheader(f"Configure {loader_name}")
 
-    target_column = st.text_input("Target Column Name", value="survived")
+    # 2. Dynamically render the initialization arguments for the selected loader class natively!
+    loader_kwargs = class_registry.render_dynamic_params(
+        loader_cls, key_prefix="data_loader"
+    )
 
     return {
-        "repo": repo_name,
-        "datasource_name": datasource_name,
-        "format_type": format_type,
-        "target_column": target_column,
+        "loader_cls": loader_cls,
+        "loader_kwargs": loader_kwargs,
     }

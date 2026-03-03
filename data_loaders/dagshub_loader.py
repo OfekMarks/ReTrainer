@@ -1,6 +1,7 @@
 import dagshub
 from dagshub.data_engine import datasources
 from typing import Any, Optional
+from pydantic import BaseModel, Field
 from data_loaders.loader_interface import DataLoaderInterface
 from settings import settings
 
@@ -11,6 +12,19 @@ class DagsHubDataEngineLoader(DataLoaderInterface):
     It can return data in various formats (DataFrames, PyTorch Dataloaders, TensorFlow Datasets)
     based on configuration, natively handling CV, sequential, or tabular data.
     """
+
+    class ConfigModel(BaseModel):
+        repo: str = Field(
+            default="ofekmarks/my-first-repo",
+            description="DagsHub repository owner/repo",
+        )
+        datasource_name: str = Field(
+            default="datasource", description="Name of the Data Engine datasource"
+        )
+        format_type: str = Field(
+            default="dataframe",
+            description="Return format (dataframe, pytorch, tensorflow)",
+        )
 
     def __init__(
         self,
