@@ -12,24 +12,18 @@ def render_dynamic_params(cls: Type[Any], key_prefix: str) -> Dict[str, Any]:
     config_model = getattr(cls, "ConfigModel", None)
 
     if not config_model or not issubclass(config_model, BaseModel):
-        # No configuration required for this class
         return {}
 
     user_inputs = {}
 
-    # In Pydantic v2, fields are stored in model_fields
     for field_name, field_info in config_model.model_fields.items():
-        # Get description and default
         desc = field_info.description if field_info.description else field_name
         default_val = field_info.default or ""
 
-        # Generate a unique key for streamlit state
         st_key = f"{key_prefix}_{cls.__name__}_{field_name}"
 
-        # Infer type from annotation
         field_type = field_info.annotation
 
-        # Determine the appropriate Streamlit widget
         if field_type is bool:
             user_inputs[field_name] = st.checkbox(
                 desc, value=bool(default_val), key=st_key
@@ -49,7 +43,6 @@ def render_dynamic_params(cls: Type[Any], key_prefix: str) -> Dict[str, Any]:
                 key=st_key,
             )
         else:
-            # Fallback to text input for strings and everything else
             user_inputs[field_name] = st.text_input(
                 desc,
                 value=str(default_val),

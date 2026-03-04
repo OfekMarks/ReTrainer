@@ -52,6 +52,11 @@ class ExperimentTracker(ABC):
         pass
 
     @abstractmethod
+    def set_tag(self, key: str, value: str) -> None:
+        """Set a tag on the active tracking run."""
+        pass
+
+    @abstractmethod
     def end_run(self) -> None:
         """End the current tracking run."""
         pass

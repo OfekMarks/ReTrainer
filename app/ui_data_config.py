@@ -10,7 +10,6 @@ def render_data_config() -> dict:
     st.header("1. Data Configuration")
     st.write("Configure connection to Data Engine.")
 
-    # 1. Select the Data Loader implementation
     loader_name = st.selectbox(
         "Data Loader Implementation", options=list(AVAILABLE_LOADERS.keys())
     )
@@ -19,7 +18,6 @@ def render_data_config() -> dict:
     st.markdown("---")
     st.subheader(f"Configure {loader_name}")
 
-    # 2. Dynamically render the initialization arguments for the selected loader class natively!
     loader_kwargs = class_registry.render_dynamic_params(
         loader_cls, key_prefix="data_loader"
     )

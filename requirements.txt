@@ -1,0 +1,9 @@
+dagshub==0.6.8
+matplotlib==3.10.8
+mlflow==3.10.0
+pandas==2.3.3
+pydantic==2.12.5
+pydantic-settings==2.13.1
+python-dotenv==1.2.2
+scikit-learn==1.7.2
+streamlit==1.54.0

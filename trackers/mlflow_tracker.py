@@ -82,6 +82,10 @@ class MLflowTracker(ExperimentTracker):
         except ModuleNotFoundError:
             raise ValueError(f"Unsupported flavor: {flavor}")
 
+    def set_tag(self, key: str, value: str) -> None:
+        """Set a tag on the active MLflow run."""
+        mlflow.set_tag(key, value)
+
     def end_run(self) -> None:
         """Safely end the MLflow run."""
         if mlflow.active_run():

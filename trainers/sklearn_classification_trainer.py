@@ -11,6 +11,7 @@ class SklearnClassificationTrainer(TrainerInterface):
     """
 
     VALID_METRICS = ["Precision", "Recall", "ROC"]
+    FLAVOR = "sklearn"
 
     def train_and_evaluate(
         self,
@@ -36,4 +37,4 @@ class SklearnClassificationTrainer(TrainerInterface):
         if metrics_classes:
             self.evaluator.log_metrics(metrics_classes, y_test, y_pred_classes, step=1)
 
-        self.tracker.log_model(self.model, name="model", flavor="sklearn")
+        self.log_trained_model()

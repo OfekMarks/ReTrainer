@@ -1,15 +1,15 @@
 import streamlit as st
 from typing import Dict, Any
-from trainers import AVAILABLE_TRAINERS
 from preprocessors import AVAILABLE_PREPROCESSORS
 import class_registry
+from ui_model_browser import render_model_browser
+import trainers
 
 
 def render_model_config() -> Dict[str, Any]:
-    """Renders the UI for configuring ML Architecture, Preprocessing natively."""
+    """Renders the UI for configuring ML Pipeline: Preprocessing + Model selection from MLflow."""
     st.header("2. ML Pipeline Components")
 
-    # --- PREPROCESSOR ---
     st.subheader("Data Preprocessor")
     prep_name = st.selectbox(
         "Preprocessor Implementation", options=list(AVAILABLE_PREPROCESSORS.keys())
@@ -21,50 +21,16 @@ def render_model_config() -> Dict[str, Any]:
 
     st.markdown("---")
 
-    # --- TRAINER ---
-    st.subheader("ML Task Trainer")
-    trainer_name = st.selectbox(
-        "Trainer Implementation", options=list(AVAILABLE_TRAINERS.keys())
-    )
-    trainer_cls = AVAILABLE_TRAINERS[trainer_name]
+    browser_result = render_model_browser()
 
-    # We still need a way to let them decide if they are doing scratch or finetuning:
-    strategy = st.radio(
-        "Training Strategy", ["Train from Scratch", "Fine-Tune Existing Model"]
-    )
+    st.markdown("---")
 
     model_config = {
         "prep_cls": prep_cls,
         "prep_kwargs": prep_kwargs,
-        "trainer_cls": trainer_cls,
-        "strategy": strategy,
-        "model_uri": None,
-        "model_class_str": None,
+        "trainer_cls": getattr(trainers, browser_result["trainer_class"]),
+        "model_uri": browser_result["model_uri"],
         "params": {},
     }
-
-    if strategy == "Fine-Tune Existing Model":
-        model_config["model_uri"] = st.text_input(
-            "MLflow Model URI",
-            value="models:/survival-classifier/1",
-            help="e.g. models:/<model_name>/<version> or runs:/<run_id>/model",
-        )
-    else:
-        # In the future we can utilize class registry here for native Scikit-Learn models!
-        model_config["model_class_str"] = st.selectbox(
-            "Model Architecture", options=["RandomForestClassifier"]
-        )
-
-        st.write("Hyperparameters")
-        n_estimators = st.slider(
-            "n_estimators", min_value=10, max_value=500, value=100, step=10
-        )
-        max_depth = st.slider("max_depth", min_value=1, max_value=50, value=10)
-
-        model_config["params"] = {
-            "n_estimators": n_estimators,
-            "max_depth": max_depth,
-            "random_state": 42,
-        }
 
     return model_config
