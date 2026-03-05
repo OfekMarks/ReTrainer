@@ -1,5 +1,7 @@
 from trackers.mlflow_tracker import MLflowTracker
 from trainer import run_training_pipeline
+from preprocessors.preprocessing_pipeline import PreprocessingPipeline
+from splitters.target_splitter import TargetSplitter
 import streamlit as st
 
 
@@ -37,12 +39,22 @@ def execute_pipeline(data_config: dict, model_config: dict, eval_config: dict):
             data_config["loader_cls"], data_config["loader_kwargs"]
         )
 
+        # Build preprocessing pipeline from ordered stages
+        st.write(f"Building Preprocessing Pipeline ({len(model_config['stages'])} stages)...")
+        prep_stages = [
+            instantiate_from_config(stage["cls"], stage["kwargs"])
+            for stage in model_config["stages"]
+        ]
+        pipeline = PreprocessingPipeline(stages=prep_stages)
+
+        # Build splitters
+        splitter = instantiate_from_config(
+            model_config["splitter_cls"], model_config["splitter_kwargs"]
+        )
+        target_splitter = TargetSplitter(target_column=model_config["target_column"])
+
         st.write(
             f"Loading existing model from MLflow: `{model_config['model_uri']}`..."
-        )
-
-        prep = instantiate_from_config(
-            model_config["prep_cls"], model_config["prep_kwargs"]
         )
 
         trainer = model_config["trainer_cls"](
@@ -56,6 +68,8 @@ def execute_pipeline(data_config: dict, model_config: dict, eval_config: dict):
         run_training_pipeline(
             tracker=tracker,
             data_loader=loader,
-            preprocessor=prep,
+            preprocessing_pipeline=pipeline,
+            splitter=splitter,
+            target_splitter=target_splitter,
             model_trainer=trainer,
         )

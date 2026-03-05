@@ -1,6 +1,6 @@
 import dagshub
 from dagshub.data_engine import datasources
-from typing import Any, Optional
+from typing import Any
 from pydantic import BaseModel, Field
 from data_loaders.loader_interface import DataLoaderInterface
 from settings import settings
@@ -9,8 +9,7 @@ from settings import settings
 class DagsHubDataEngineLoader(DataLoaderInterface):
     """
     A concrete loader for DagsHub Data Engine.
-    It can return data in various formats (DataFrames, PyTorch Dataloaders, TensorFlow Datasets)
-    based on configuration, natively handling CV, sequential, or tabular data.
+    Returns the full dataset; splitting is handled by splitter modules.
     """
 
     class ConfigModel(BaseModel):
@@ -33,13 +32,6 @@ class DagsHubDataEngineLoader(DataLoaderInterface):
         format_type: str = "dataframe",
         **flavor_kwargs,
     ):
-        """
-        Args:
-            repo: DagsHub repo (e.g., 'ofekmarks/my-first-repo')
-            datasource_name: Name of the Data Engine datasource.
-            format_type: 'dataframe', 'pytorch', or 'tensorflow'.
-            flavor_kwargs: Extra kwargs for PyTorch/TF (e.g., batch_size, transform wrappers).
-        """
         self.repo = repo
         self.datasource_name = datasource_name
         self.format_type = format_type
@@ -55,7 +47,7 @@ class DagsHubDataEngineLoader(DataLoaderInterface):
             df = query.all().dataframe
             if df.empty:
                 raise ValueError(
-                    f"No Data Engine records found for the requested split."
+                    "No Data Engine records found for the requested query."
                 )
             return df
         elif self.format_type == "pytorch":
@@ -69,10 +61,6 @@ class DagsHubDataEngineLoader(DataLoaderInterface):
                 f"Unsupported format_type: '{self.format_type}'. Expected dataframe, pytorch, or tensorflow."
             )
 
-    def get_train_data(self) -> Any:
-        """Query and return the 'train' split."""
-        return self._convert_query_to_format(self.ds[self.ds["split"] == "train"])
-
-    def get_test_data(self) -> Any:
-        """Query and return the 'test' split."""
-        return self._convert_query_to_format(self.ds[self.ds["split"] == "test"])
+    def get_data(self) -> Any:
+        """Fetch the complete dataset from the DagsHub datasource."""
+        return self._convert_query_to_format(self.ds)

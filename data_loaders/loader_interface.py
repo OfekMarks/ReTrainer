@@ -11,11 +11,6 @@ class DataLoaderInterface(ABC):
     """
 
     @abstractmethod
-    def get_train_data(self) -> Any:
-        """Fetch the training dataset split."""
-        pass
-
-    @abstractmethod
-    def get_test_data(self) -> Any:
-        """Fetch the testing dataset split."""
+    def get_data(self) -> Any:
+        """Fetch the complete dataset (before any splitting)."""
         pass
