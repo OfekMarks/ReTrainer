@@ -1,10 +1,13 @@
+from typing import Any, Dict, List
+
+import class_registry
 import streamlit as st
-from typing import Dict, Any, List
+from cytoolz import get
+from ui_model_browser import render_model_browser
+
+import trainers
 from preprocessors import AVAILABLE_PREPROCESSORS
 from splitters import AVAILABLE_SPLITTERS
-import class_registry
-from ui_model_browser import render_model_browser
-import trainers
 
 
 def _render_preprocessing_stages() -> List[Dict[str, Any]]:
@@ -39,13 +42,17 @@ def _render_preprocessing_stages() -> List[Dict[str, Any]]:
         with col_up:
             if i > 0 and st.button("⬆", key=f"up_{i}"):
                 st.session_state.prep_stages[i], st.session_state.prep_stages[i - 1] = (
-                    st.session_state.prep_stages[i - 1], st.session_state.prep_stages[i]
+                    st.session_state.prep_stages[i - 1],
+                    st.session_state.prep_stages[i],
                 )
                 st.rerun()
         with col_down:
-            if i < len(st.session_state.prep_stages) - 1 and st.button("⬇", key=f"down_{i}"):
+            if i < len(st.session_state.prep_stages) - 1 and st.button(
+                "⬇", key=f"down_{i}"
+            ):
                 st.session_state.prep_stages[i], st.session_state.prep_stages[i + 1] = (
-                    st.session_state.prep_stages[i + 1], st.session_state.prep_stages[i]
+                    st.session_state.prep_stages[i + 1],
+                    st.session_state.prep_stages[i],
                 )
                 st.rerun()
         with col_remove:
@@ -62,7 +69,9 @@ def _render_preprocessing_stages() -> List[Dict[str, Any]]:
             st.markdown("---")
 
     if not st.session_state.prep_stages:
-        st.info("No preprocessing stages added. Raw data will be passed directly to splitting.")
+        st.info(
+            "No preprocessing stages added. Raw data will be passed directly to splitting."
+        )
 
     return stages_config
 
@@ -104,13 +113,21 @@ def render_model_config() -> Dict[str, Any]:
 
     browser_result = render_model_browser()
 
+    # Guard against missing browser result or missing trainer_class tag
+    trainer_cls = None
+    model_uri = None
+    if browser_result:
+        model_uri = get("model_uri", browser_result)
+        trainer_class_name = get("trainer_class", browser_result)
+        trainer_cls = getattr(trainers, trainer_class_name, None)
+
     model_config = {
         "stages": stages_config,
         "splitter_cls": splitter_config["splitter_cls"],
         "splitter_kwargs": splitter_config["splitter_kwargs"],
         "target_column": splitter_config["target_column"],
-        "trainer_cls": getattr(trainers, browser_result["trainer_class"]),
-        "model_uri": browser_result["model_uri"],
+        "trainer_cls": trainer_cls,
+        "model_uri": model_uri,
     }
 
     return model_config

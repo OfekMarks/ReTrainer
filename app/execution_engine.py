@@ -3,6 +3,7 @@ from trainer import run_training_pipeline
 from preprocessors.preprocessing_pipeline import PreprocessingPipeline
 from splitters.target_splitter import TargetSplitter
 import streamlit as st
+import mlflow
 
 
 def instantiate_from_config(cls, kwargs: dict):
@@ -73,3 +74,5 @@ def execute_pipeline(data_config: dict, model_config: dict, eval_config: dict):
             target_splitter=target_splitter,
             model_trainer=trainer,
         )
+
+        return mlflow.active_run().info.run_id

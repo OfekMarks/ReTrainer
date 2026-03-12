@@ -1,13 +1,13 @@
 import importlib
-
-from typing import Any, Dict, List, Optional
+import os
+import tempfile
+from typing import Any, Dict, Optional
 
 import mlflow
-
-from trackers.tracker_interface import ExperimentTracker
-from settings import settings
-
 from matplotlib.figure import Figure
+
+from settings import settings
+from trackers.tracker_interface import ExperimentTracker
 
 
 class MLflowTracker(ExperimentTracker):
@@ -63,13 +63,23 @@ class MLflowTracker(ExperimentTracker):
         try:
             module = importlib.import_module(f"mlflow.{flavor}")
 
-            # Scikit-learn has a specific security warning for pickle. 'skops' is the modern standard.
             if flavor == "sklearn":
                 kwargs["serialization_format"] = "skops"
 
-            module.log_model(model, name, **kwargs)
-        except ModuleNotFoundError:
-            raise ValueError(f"Unsupported flavor: {flavor}")
+            # Manually save and upload to bypass completely silent `log_model` upstream bugs
+            with tempfile.TemporaryDirectory() as tmpdir:
+                local_path = os.path.join(tmpdir, name)
+
+                # Create the model locally with requirements fallback disabled
+                if flavor == "sklearn":
+                    kwargs["pip_requirements"] = []
+                module.save_model(model, local_path, **kwargs)
+
+                # Explicitly upload the constructed directory format
+                mlflow.log_artifacts(local_path, artifact_path=name)
+
+        except ModuleNotFoundError as e:
+            raise ValueError(f"Unsupported flavor: {flavor}") from e
 
     def load_model(self, model_uri: str, flavor: str = "sklearn", **kwargs) -> Any:
         """
@@ -79,8 +89,8 @@ class MLflowTracker(ExperimentTracker):
         try:
             module = importlib.import_module(f"mlflow.{flavor}")
             return module.load_model(model_uri, **kwargs)
-        except ModuleNotFoundError:
-            raise ValueError(f"Unsupported flavor: {flavor}")
+        except ModuleNotFoundError as e:
+            raise ValueError(f"Unsupported flavor: {flavor}") from e
 
     def set_tag(self, key: str, value: str) -> None:
         """Set a tag on the active MLflow run."""
