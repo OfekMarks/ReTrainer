@@ -10,6 +10,7 @@ from ui_model_config import render_model_config
 from ui_eval_config import render_evaluation_config
 from execution_engine import execute_pipeline
 from ui_model_register import render_registration_form
+from ui_results import render_results
 from config_manager import export_config, import_config
 
 st.set_page_config(page_title="ReTrainer Pipeline Dashboard", layout="wide")
@@ -60,6 +61,9 @@ def main():
                 st.error(f"Pipeline Failed: {e}")
 
     if "finished_run_id" in st.session_state:
+        st.divider()
+        render_results(st.session_state["finished_run_id"])
+        st.divider()
         render_registration_form(st.session_state["finished_run_id"])
 
 
