@@ -2,28 +2,15 @@ import json
 import streamlit as st
 
 
-def get_state_keys() -> tuple:
-    """Returns prefixes and exact keys that belong to the pipeline configuration."""
-    return (
-        "data_loader",
-        "prep_stages",
-        "splitter",
-        "target_column",
-        "metrics_to_log",
-        "experiment_name",
-        "run_name",
-        "selected_registered_model",
-        "selected_model_version",
-    )
+STATE_PREFIX = "cfg_"
 
 
 def export_config() -> str:
     """Serializes relevant session state to a JSON string."""
     config_state = {}
-    valid_keys = get_state_keys()
 
     for k, v in st.session_state.items():
-        if k.startswith(valid_keys):
+        if k.startswith(STATE_PREFIX):
             config_state[k] = v
 
     return json.dumps(config_state, indent=4)
@@ -31,15 +18,23 @@ def export_config() -> str:
 
 def import_config(uploaded_file) -> None:
     """Loads a JSON file and injects it into the Streamlit session state."""
+    if uploaded_file is None:
+        return
+
     try:
         config_state = json.load(uploaded_file)
-        valid_keys = get_state_keys()
+
+        if not isinstance(config_state, dict):
+            st.error("Invalid configuration format: Expected a JSON object.")
+            return
 
         for k, v in config_state.items():
-            if k.startswith(valid_keys):
+            if k.startswith(STATE_PREFIX):
                 st.session_state[k] = v
 
         st.success("Configuration loaded successfully.")
         st.rerun()
-    except Exception as e:
+    except json.JSONDecodeError as e:
         st.error(f"Failed to parse configuration: {e}")
+    except (TypeError, AttributeError) as e:
+        st.error(f"Invalid configuration structure: {e}")

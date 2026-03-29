@@ -13,7 +13,7 @@ def render_data_config() -> dict:
     loader_name = st.selectbox(
         "Data Loader Implementation",
         options=list(AVAILABLE_LOADERS.keys()),
-        key="data_loader_name",
+        key="cfg_data_loader_name",
     )
     loader_cls = AVAILABLE_LOADERS[loader_name]
 
@@ -21,7 +21,7 @@ def render_data_config() -> dict:
     st.subheader(f"Configure {loader_name}")
 
     loader_kwargs = class_registry.render_dynamic_params(
-        loader_cls, key_prefix="data_loader"
+        loader_cls, key_prefix="cfg_data_loader"
     )
 
     return {

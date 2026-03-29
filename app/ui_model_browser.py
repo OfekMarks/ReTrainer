@@ -56,7 +56,7 @@ def _render_model_selector(registered_models: List[RegisteredModel]) -> Register
     """Renders a selectbox for choosing a registered model and returns the selected RegisteredModel."""
     model_names = list(map(attrgetter("name"), registered_models))
     selected_name = st.selectbox(
-        "Registered Model", options=model_names, key="selected_registered_model"
+        "Registered Model", options=model_names, key="cfg_selected_registered_model"
     )
 
     selected_rm = next(rm for rm in registered_models if rm.name == selected_name)
@@ -110,7 +110,7 @@ def _render_version_picker(
         options=version_options,
         format_func=lambda v: f"v{v}"
         + (f" ({', '.join(alias_map[v])})" if alias_map.get(v) else ""),
-        key="selected_model_version",
+        key="cfg_selected_model_version",
     )
 
     return selected_version
