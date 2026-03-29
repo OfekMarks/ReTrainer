@@ -10,6 +10,7 @@ from ui_model_config import render_model_config
 from ui_eval_config import render_evaluation_config
 from execution_engine import execute_pipeline
 from ui_model_register import render_registration_form
+from config_manager import export_config, import_config
 
 st.set_page_config(page_title="ReTrainer Pipeline Dashboard", layout="wide")
 
@@ -19,6 +20,27 @@ def main():
     st.markdown(
         "Easily configure and instantly launch training pipelines into our SOLID architecture backend."
     )
+
+    # --- Add Configuration Sidebar ---
+    with st.sidebar:
+        st.header("💾 Configuration")
+
+        uploaded_file = st.file_uploader("Import Config JSON", type=["json"])
+        if uploaded_file is not None:
+            if st.button("Load Configuration", use_container_width=True):
+                import_config(uploaded_file)
+
+        st.divider()
+
+        config_json = export_config()
+        st.download_button(
+            label="Export Current Config",
+            data=config_json,
+            file_name="retraining_config.json",
+            mime="application/json",
+            use_container_width=True,
+        )
+    # ---------------------------------
 
     data_config = render_data_config()
     st.divider()
@@ -39,6 +61,7 @@ def main():
 
     if "finished_run_id" in st.session_state:
         render_registration_form(st.session_state["finished_run_id"])
+
 
 if __name__ == "__main__":
     main()

@@ -80,7 +80,7 @@ def _render_splitter_config() -> Dict[str, Any]:
     """Renders the train/test splitter and target column configuration."""
     st.subheader("Train/Test Split")
     splitter_name = st.selectbox(
-        "Split Strategy", options=list(AVAILABLE_SPLITTERS.keys())
+        "Split Strategy", options=list(AVAILABLE_SPLITTERS.keys()), key="splitter_name"
     )
     splitter_cls = AVAILABLE_SPLITTERS[splitter_name]
     splitter_kwargs = class_registry.render_dynamic_params(

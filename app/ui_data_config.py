@@ -11,7 +11,9 @@ def render_data_config() -> dict:
     st.write("Configure connection to Data Engine.")
 
     loader_name = st.selectbox(
-        "Data Loader Implementation", options=list(AVAILABLE_LOADERS.keys())
+        "Data Loader Implementation",
+        options=list(AVAILABLE_LOADERS.keys()),
+        key="data_loader_name",
     )
     loader_cls = AVAILABLE_LOADERS[loader_name]
 

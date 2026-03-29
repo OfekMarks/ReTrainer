@@ -18,7 +18,7 @@ def _fetch_registered_models() -> Optional[List[RegisteredModel]]:
 
         if not models:
             st.warning("No registered models found in the MLflow Model Registry.")
-            return 
+            return
 
         return models
     except Exception as e:
@@ -55,7 +55,9 @@ def _build_alias_map(registered_model: RegisteredModel) -> Dict[str, List[str]]:
 def _render_model_selector(registered_models: List[RegisteredModel]) -> RegisteredModel:
     """Renders a selectbox for choosing a registered model and returns the selected RegisteredModel."""
     model_names = list(map(attrgetter("name"), registered_models))
-    selected_name = st.selectbox("Registered Model", options=model_names)
+    selected_name = st.selectbox(
+        "Registered Model", options=model_names, key="selected_registered_model"
+    )
 
     selected_rm = next(rm for rm in registered_models if rm.name == selected_name)
     if getattr(selected_rm, "description", None):
@@ -64,17 +66,24 @@ def _render_model_selector(registered_models: List[RegisteredModel]) -> Register
     return selected_rm
 
 
-def _render_versions_table(versions_sorted: List[ModelVersion], alias_map: Dict[str, List[str]]) -> None:
+def _render_versions_table(
+    versions_sorted: List[ModelVersion], alias_map: Dict[str, List[str]]
+) -> None:
     """Builds and displays a table of model version metadata."""
-    version_df = pd.DataFrame([{
-        "Version": v.version,
-        "Aliases": ", ".join(alias_map.get(str(v.version), [])) or "—",
-        "Status": v.status,
-        "Created": datetime.datetime.fromtimestamp(
-            v.creation_timestamp / 1000
-        ).strftime("%Y-%m-%d %H:%M"),
-        "Run ID": v.run_id if v.run_id else "—",
-    } for v in versions_sorted])
+    version_df = pd.DataFrame(
+        [
+            {
+                "Version": v.version,
+                "Aliases": ", ".join(alias_map.get(str(v.version), [])) or "—",
+                "Status": v.status,
+                "Created": datetime.datetime.fromtimestamp(
+                    v.creation_timestamp / 1000
+                ).strftime("%Y-%m-%d %H:%M"),
+                "Run ID": v.run_id if v.run_id else "—",
+            }
+            for v in versions_sorted
+        ]
+    )
 
     st.markdown("##### Available Versions")
     st.dataframe(
@@ -91,23 +100,25 @@ def _render_versions_table(versions_sorted: List[ModelVersion], alias_map: Dict[
     )
 
 
-def _render_version_picker(versions_sorted: List, alias_map: Dict[str, List[str]]) -> str:
+def _render_version_picker(
+    versions_sorted: List, alias_map: Dict[str, List[str]]
+) -> str:
     """Renders a selectbox for picking a specific model version and returns the selected version string."""
     version_options = [str(v.version) for v in versions_sorted]
     selected_version = st.selectbox(
         "Select Version to Retrain",
         options=version_options,
-        format_func=lambda v: f"v{v}" + (
-            f" ({', '.join(alias_map[v])})"
-            if alias_map.get(v)
-            else ""
-        ),
+        format_func=lambda v: f"v{v}"
+        + (f" ({', '.join(alias_map[v])})" if alias_map.get(v) else ""),
+        key="selected_model_version",
     )
 
     return selected_version
 
 
-def _resolve_selection(selected_name: str, selected_version: str, versions_sorted: List) -> Dict[str, Any]:
+def _resolve_selection(
+    selected_name: str, selected_version: str, versions_sorted: List
+) -> Dict[str, Any]:
     """Builds the model URI and looks up the trainer class tag from the selected version."""
     model_uri = f"models:/{selected_name}/{selected_version}"
 

@@ -10,13 +10,16 @@ def render_evaluation_config() -> dict:
         "Select Metrics to Log",
         options=["ROC", "Recall", "Precision", "IoU"],
         default=["ROC", "Recall", "Precision"],
+        key="metrics_to_log",
     )
 
     st.subheader("Experiment Tracker")
     experiment_name = st.text_input(
-        "Experiment Name", value="cpu_retraining_experiment"
+        "Experiment Name", value="cpu_retraining_experiment", key="experiment_name"
     )
-    run_name = st.text_input("Run Name", value="retraining_my-first-repo_datasource")
+    run_name = st.text_input(
+        "Run Name", value="retraining_my-first-repo_datasource", key="run_name"
+    )
 
     return {
         "metrics_to_log": metrics_to_log,
